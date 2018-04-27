@@ -1,0 +1,19 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"> 
+
+<h:head>
+	<title>Page navigated to upon return from any flow</title>
+</h:head> 
+<body> 
+	<h1>Page navigated to upon return from any flow</h1>
+	
+	<h:form prependId="false">
+		<p>has a flow: #{null!= facesContext.application.flowHandler.currenFlow}.</p>
+		<p>flowScope value (should be empty): #{flowScope.value}.</p>
+		<h:commandButton action="faces/flows_declarative" value="home" id="index"/>
+	</h:form>
+</body> 
+</html>

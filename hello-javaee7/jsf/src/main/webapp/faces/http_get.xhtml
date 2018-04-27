@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"> 
+
+<h:head>
+	<title>JSF and HTTP Get</title>
+</h:head> 
+<body> 
+	<h2>JSF and HTTP GET</h2>
+	h:link <h:link value="Login1" outcome="http_get_login" id="link1"/><br/>
+	h:link with f:param <h:link value="Login2" outcome="http_get_login" id="link2">
+		<f:param name="name" value="Jack"></f:param>
+	</h:link>
+	h:link with f:param (pre-process) <h:link value="Login3" outcome="http_get2" id="link3">
+		<f:param name="name" value="Jack2"/>
+	</h:link>
+	
+	<br/><br/>
+        h:button: <h:button value="Login4" id="button1" outcome="http_get_login"/>
+</body> 
+</html>
