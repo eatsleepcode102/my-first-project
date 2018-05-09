@@ -1,0 +1,11 @@
+Singleton pattern restricts the instantiation of a class and ensures that only 
+one instance of the class exists in the java virtual machine. The singleton 
+must provide a global access point to get the instance of the class.
+Singleton pattern is used for logging, driver objects, caching and thread pool.
+
+To implement singleton pattern, we have different approaches but all of them have
+following common concepts.
+ - private constructor to restrict instantiation of the class from other classes.
+ - private static variable of the same class that is the only instance of the class.
+ - public static method that returns a instance of the class, this is the global access point
+  for outer world to get the instance of the singleton class
