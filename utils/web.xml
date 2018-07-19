@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+	version="3.1">
+
+	<display-name>TH6</display-name>
+	
+	<welcome-file-list>
+		<welcome-file>index.xhtml</welcome-file>		
+	</welcome-file-list>
+	
+	
+	<session-config>
+		<tracking-mode>COOKIE</tracking-mode>
+    	<cookie-config>
+    		<!-- Specify path for the JSESSIONID cookie to avoid conflict with other Java Application running on the same host (such as TH5) -->    		
+    		<path>/TH6</path>
+    	</cookie-config>
+    	
+    	<!-- Default timeout is only 30 minutes -->
+    	<session-timeout>120</session-timeout>
+    </session-config>
+
+
+	<!-- For JAX-RS -->
+	<servlet-mapping>
+		<servlet-name>javax.ws.rs.core.Application</servlet-name>
+		<url-pattern>/rs/*</url-pattern>
+	</servlet-mapping>
+	
+	<filter-mapping>
+		<filter-name>synergix.th6.business.action.jaxrs.TransactionServletFilter</filter-name>
+		<servlet-name>javax.ws.rs.core.Application</servlet-name>		
+	</filter-mapping>
+
+	<!-- Enabling JSF -->
+	<servlet>
+		<servlet-name>facesServlet</servlet-name>
+		<servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+		
+	<!-- Map directly to .xhtml extension, and we don't need to place a security restriction to
+	prevent users from seeing .xhtml source file. Developers also don't have to worry when to use .xhtml or .jsf -->
+	<servlet-mapping>
+		<servlet-name>facesServlet</servlet-name>
+		<url-pattern>*.xhtml</url-pattern>
+	</servlet-mapping>
+
+
+
+	<!-- OmniFaces filters -->
+	<filter>
+		<filter-name>facesExceptionFilter</filter-name>
+		<filter-class>org.omnifaces.filter.FacesExceptionFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>facesExceptionFilter</filter-name>
+		<servlet-name>facesServlet</servlet-name>
+	</filter-mapping>
+
+	<filter>
+		<filter-name>gzipResponseFilter</filter-name>
+		<filter-class>org.omnifaces.filter.GzipResponseFilter</filter-class>
+	</filter>
+	
+	<filter-mapping>
+		<filter-name>gzipResponseFilter</filter-name>
+		<servlet-name>facesServlet</servlet-name>
+		<dispatcher>REQUEST</dispatcher>
+		<dispatcher>ERROR</dispatcher>
+	</filter-mapping>
+	
+	
+	<!-- TH6 filters -->
+	<filter-mapping>
+		<filter-name>synergix.th6.framework.faces.cdi.AutomaticConversationPropagationFilter</filter-name>
+		<servlet-name>facesServlet</servlet-name>
+	</filter-mapping>	
+	
+	<!--
+	   The mapping of this CDI Conversation Filter here cause the conversation activation and
+	   initialization to be performed within this filter. Without this mapping, the default
+	   behavior is that the activation is performed before the filter chain, but the initialization
+	   would be done lazily when the conversation context is first accessed.
+	   
+	   We don't really need eager initialization here, but we need to delay the activation, so that
+	   we could do some cid parameter restoration first.	   
+	   
+	   The filters are process in the order they are mapped in this web.xml file,
+	   thus our automaticConversationPropagationFilter would be able to wrap the default request object
+	   within our own request object, which would be able to find cid parameter from session
+	   if it's not set
+	 -->
+	
+	<filter-mapping>
+    	<filter-name>CDI Conversation Filter</filter-name>
+		<servlet-name>facesServlet</servlet-name>
+	</filter-mapping>
+
+
+	<!-- JSF configuration -->
+	
+	<!-- 
+		By default, the project stage is production. We should use JNDI to change to Development on our development PCs.
+		For Wildfly, add this to standalone.xml,  <subsystem xmlns="urn:jboss:domain:naming>
+		
+		<bindings>
+            <simple name="java:/env/jsf/ProjectStage" value="Development"/>
+        </bindings>
+	-->
+	
+	<!--	
+	<context-param>
+		<param-name>javax.faces.PROJECT_STAGE</param-name>
+		<param-value>Production</param-value>
+	</context-param>
+	 -->
+	 
+	<resource-ref>
+		<res-ref-name>jsf/ProjectStage</res-ref-name>
+		<res-type>java.lang.String</res-type>		
+	</resource-ref>
+	
+	<!-- Mojarra specific: Reduce Resource cache age from default 7 days to 1 day -->
+	<context-param>
+		<param-name>com.sun.faces.defaultResourceMaxAge</param-name>
+		<param-value>86400000</param-value>
+	</context-param>
+		
+
+	<!-- Facelets configuration -->
+	<context-param>
+		<param-name>javax.faces.FACELETS_LIBRARIES</param-name>
+		<param-value>/WEB-INF/tags/synfaces-taglib.xml</param-value>
+	</context-param>
+	
+	<context-param>
+		<param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+		<param-value>true</param-value>
+	</context-param>	
+
+	<!-- 
+	     Set to -1 would disable refreshing and improve performance visibly.
+	     However, we still need to be able to hot fix the xhtml every now and then,
+	     and thus have to sacrifice some performance for this. So we set this value to 0, even in PRODUCTION
+	-->
+	<context-param>		
+		<param-name>javax.faces.FACELETS_REFRESH_PERIOD</param-name>
+		<param-value>0</param-value>
+	</context-param>	
+	
+	<!-- Default value is 1K. We change it to 100K to allow the exception handler a bit more time -->
+	<context-param>
+		<param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
+		<param-value>102400</param-value>
+	</context-param>
+	
+	
+	<!-- OmniFaces -->
+	<!-- <context-param>
+		<param-name>org.omnifaces.COMBINED_RESOURCE_HANDLER_DISABLED</param-name>
+		<param-value>#{debugBean.omniFacesCombinedResourceHandlerDisabled}</param-value>
+	</context-param>
+	
+	
+	<context-param>
+		<param-name>org.omnifaces.COMBINED_RESOURCE_HANDLER_EXCLUDED_RESOURCES</param-name>
+		<param-value>primefaces:jquery/jquery.js,primefaces:primefaces.js</param-value>
+	</context-param> -->
+	
+	
+	
+	
+	
+	<!-- Security -->
+	<security-constraint>
+		<display-name>Restrict direct access to composite component</display-name>
+		<web-resource-collection>
+			<web-resource-name>Resources</web-resource-name>
+			<url-pattern>/resources/synfaces/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint/>
+	</security-constraint>	
+	
+
+	<!-- Exception handling -->
+	<!-- We are using OmniFaces FullAjaxExceptionHandler which is capable of 
+		handling exception from Ajax request -->
+	<!-- We must have at least one error page for java.lang.Throwable to cache 
+		unspecified exception -->
+	<!-- While FullAjaxExceptionHandler is capable of accessing WEB-INF folder, 
+		the built-in Servlet exception handler is not. -->
+	<!-- Thus we must put the error pages outside WEB-INF -->
+	<!-- OmniFaces require a Throwable, not just Exception -->
+	<error-page>
+		<exception-type>java.lang.Throwable</exception-type>
+		<location>/errorpages/error.xhtml?nocid=true</location>
+	</error-page>
+
+	<error-page>
+		<exception-type>javax.faces.application.ViewExpiredException</exception-type>
+		<location>/errorpages/view_expired.xhtml?nocid=true</location>
+	</error-page>
+	
+	<error-page>
+		<exception-type>javax.enterprise.context.NonexistentConversationException</exception-type>
+		<location>/errorpages/view_expired.xhtml?nocid=true</location>
+	</error-page>
+	
+	<error-page>
+		<exception-type>synergix.th6.framework.persistence.transaction.SynApplicationExceptionWithUserMessage</exception-type>
+		<location>/errorpages/app_exception.xhtml?nocid=true</location>
+	</error-page>
+
+
+	<!-- PrimeFaces additional configuration -->
+	<context-param>
+		<param-name>primefaces.SUBMIT</param-name>
+		<param-value>partial</param-value>
+	</context-param>
+	
+	<context-param>
+		<param-name>primefaces.RESET_VALUES</param-name>
+		<param-value>true</param-value>
+	</context-param>
+	
+	<context-param>
+   		<param-name>primefaces.FONT_AWESOME</param-name>
+   		<param-value>true</param-value>
+	</context-param>
+
+
+	<!-- set default theme -->
+	<context-param>
+		<param-name>primefaces.THEME</param-name>
+		<param-value>synfaces</param-value> 
+	</context-param>
+	
+	<!-- Mime mapping for font-awesome to avoid warning -->
+	<mime-mapping>
+    	<extension>eot</extension>
+    	<mime-type>application/vnd.ms-fontobject</mime-type>
+	</mime-mapping>
+	
+	<mime-mapping>
+    	<extension>woff</extension>
+    	<mime-type>application/font-woff</mime-type>
+	</mime-mapping>
+	
+	<mime-mapping>
+    	<extension>woff2</extension>
+    	<mime-type>application/font-woff2</mime-type>
+	</mime-mapping>
+	
+	<mime-mapping>
+    	<extension>ttf</extension>
+    	<mime-type>application/x-font-truetype</mime-type>
+	</mime-mapping>
+</web-app>
